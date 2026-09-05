@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Initial public-safe repository structure, documentation, and local development Compose stack.
+- Added `docs/runbooks/postgresql-backup-restore.md` with the tested local PostgreSQL backup, isolated restore-test, verification, and cleanup procedure.
 
 ### Changed
 
