@@ -2,11 +2,11 @@
 
 ## Secrets management
 
-Keep secrets in environment configuration or an approved secret manager, never in Git. `.env` files, `secrets/`, and `credentials/` are ignored; `.env.example` contains placeholders only. Use separate credentials for development, staging, and production.
+Keep secrets in environment configuration or an approved secret manager, never in Git. `.env` files, `secrets/`, and `credentials/` are ignored; `.env.example` contains placeholders only. Generate unique, random secrets of at least 32 characters for the PostgreSQL password and n8n encryption key. Use separate credentials for development, staging, and production.
 
 ## Least privilege
 
-Create service accounts and integration tokens with only the permissions each workflow needs. Limit database access by role, limit publishing integrations to approved operations, and avoid sharing administrator credentials.
+Create service accounts and integration tokens with only the permissions each workflow needs. Limit database access by role, limit publishing integrations to approved operations, and avoid sharing administrator credentials. The initial Compose stack keeps PostgreSQL internal to its Docker network. n8n `2.37.10` uses its built-in user management; create its initial owner account on first startup and do not use deprecated `N8N_BASIC_AUTH_*` variables.
 
 ## API key rotation
 

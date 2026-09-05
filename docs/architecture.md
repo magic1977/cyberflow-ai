@@ -1,6 +1,6 @@
 # Initial Architecture
 
-CyberFlow AI is designed as a modular, self-hosted automation platform. The initial development stack contains n8n and PostgreSQL, deployed together with Docker Compose.
+CyberFlow AI is designed as a modular, self-hosted automation platform. The initial development stack contains n8n `2.37.10` and PostgreSQL, deployed together with Docker Compose.
 
 ## Components
 
@@ -34,6 +34,6 @@ Workflow definitions will be organized by domain in `workflows/cyber`, `workflow
 
 ## Boundaries and safeguards
 
-n8n is the orchestration boundary; it does not replace durable storage, so workflow state and domain data belong in PostgreSQL. Secrets are injected from local or deployment environment configuration and are never stored in this repository. No external publication or comment reply may bypass a human approval step.
+n8n is the orchestration boundary; it does not replace durable storage, so workflow state and domain data belong in PostgreSQL. PostgreSQL has no host port mapping and is reachable only on the Compose network. Secrets are injected from local or deployment environment configuration and are never stored in this repository. n8n uses its built-in user management: create the initial owner through its first-run setup screen rather than using deprecated Basic Auth environment variables. The settings file permission check is enforced, and `TZ` plus `GENERIC_TIMEZONE` set container and workflow time to `Europe/London`. No external publication or comment reply may bypass a human approval step.
 
 Redis and monitoring are intentionally excluded from the initial runtime stack. Their directories reserve a documented location for later phases without adding unnecessary services today.

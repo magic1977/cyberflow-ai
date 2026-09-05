@@ -35,16 +35,16 @@ Phase 0 is in progress: this repository provides the public-safe project foundat
 ## Quick start
 
 1. Copy `.env.example` to `.env`.
-2. Replace only the local development placeholders in `.env`; never commit it.
+2. Replace every placeholder in `.env` with a unique, randomly generated secret of at least 32 characters; never commit it.
 3. Start the development services:
 
    ```sh
    docker compose up -d
    ```
 
-4. Open n8n at `http://localhost:${N8N_PORT:-5678}`.
+4. Open n8n at `http://localhost:${N8N_PORT:-5678}` and create the initial owner account in n8n's setup screen. Current n8n releases use built-in user management; Basic Auth environment variables are not used.
 
-The first runnable workflows will be added in later phases.
+The stack pins n8n to version `2.37.10`, uses the `Europe/London` timezone, and keeps PostgreSQL accessible only to Docker services. The first runnable workflows will be added in later phases.
 
 ## Development principles
 

@@ -15,4 +15,4 @@ CyberFlow AI needs a self-hosted foundation for cybersecurity intelligence autom
 
 ## Consequences
 
-The initial runtime stack remains small and reproducible. Workflow logic should be exportable and kept under `workflows/` when introduced, while durable domain data remains in PostgreSQL. Redis, monitoring, and publishing integrations are deferred until their requirements justify their operational cost.
+The initial runtime stack remains small and reproducible. n8n is pinned to `2.37.10`; its built-in user management replaces deprecated Basic Auth environment variables. Docker Compose configures n8n and workflow time for `Europe/London`, enforces settings-file permissions, and exposes only n8n's web port; PostgreSQL remains internal to the Compose network. Workflow logic should be exportable and kept under `workflows/` when introduced, while durable domain data remains in PostgreSQL. Redis, monitoring, and publishing integrations are deferred until their requirements justify their operational cost.

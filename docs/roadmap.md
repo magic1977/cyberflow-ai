@@ -4,6 +4,8 @@ This roadmap describes the intended delivery order. Each phase follows the Docum
 
 1. **Phase 0 — Repository & Documentation:** establish public-safe repository conventions, architecture, security guidance, and development documentation.
 2. **Phase 1 — Platform Core:** define shared data model, environment configuration, operational foundations, and workflow conventions.
+
+   **Definition of Done:** documented database backup procedure, successful restore test, restart/persistence test for Docker volumes, and successful n8n startup health validation.
 3. **Phase 2 — Cybersecurity Sources:** ingest selected cybersecurity intelligence sources.
 4. **Phase 3 — Deduplication, AI Scoring & Research:** identify duplicate items, score relevance, and verify research sources.
 5. **Phase 4 — LinkedIn Content Agent:** produce evidence-based LinkedIn content drafts from approved intelligence.
