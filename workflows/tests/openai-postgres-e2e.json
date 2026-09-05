@@ -43,12 +43,7 @@
       ],
       "id": "7f38e9bc-b59b-40aa-a53c-2f191df82b37",
       "name": "Message a model",
-      "credentials": {
-        "openAiApi": {
-          "id": "jwz9viq3EiXiJXIE",
-          "name": "OpenAI account"
-        }
-      }
+      "credentials": {}
     },
     {
       "parameters": {
