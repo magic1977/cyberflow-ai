@@ -99,15 +99,13 @@ Workflow exports intended for version control should be reviewed and moved into 
 
 Current structure:
 
-```text
+~~~text
 workflows/
 ├── tests/
-├── ingestion/
-├── scoring/
-├── research/
-├── publishing/
+├── cyber/
+├── linkedin/
 └── comments/
-```
+~~~
 
 Example validated workflow:
 
