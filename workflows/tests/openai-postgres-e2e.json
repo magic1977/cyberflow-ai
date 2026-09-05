@@ -48,7 +48,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO ai_test_results\n(provider, model, response_text)\nVALUES\n('openai', 'gpt-5-mini', $1)\nRETURNING *;",
+        "query": "CREATE TABLE IF NOT EXISTS ai_test_results (id bigserial PRIMARY KEY, provider text NOT NULL, model text NOT NULL, response_text text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());\nINSERT INTO ai_test_results\n(provider, model, response_text)\nVALUES\n('openai', 'gpt-5-mini', $1)\nRETURNING *;", 
         "options": {
           "queryReplacement": "={{ $json.output[0].content[0].text }}"
         }
