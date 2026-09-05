@@ -44,7 +44,7 @@ Phase 0 is in progress: this repository provides the public-safe project foundat
 
 4. Open n8n at `http://localhost:${N8N_PORT:-5678}` and create the initial owner account in n8n's setup screen. Current n8n releases use built-in user management; Basic Auth environment variables are not used.
 
-The stack pins n8n to version `2.37.10`, uses the `Europe/London` timezone, and keeps PostgreSQL accessible only to Docker services. The first runnable workflows will be added in later phases.
+The stack pins n8n to version `2.37.10`, uses the `Europe/London` timezone, and keeps PostgreSQL accessible only to Docker services. The n8n health check uses the supported `/healthz` endpoint, consistent with n8n's Docker configuration. The first runnable workflows will be added in later phases.
 
 ## Development principles
 
