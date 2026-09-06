@@ -105,26 +105,6 @@
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-09-05T13:33:46.356Z",
-      "createdAt": "2026-09-05T13:33:46.356Z",
-      "role": "workflow:owner",
-      "workflowId": "h3lqqYs7yBkkNVJm",
-      "projectId": "yJLQvv6llW4xz9Hb",
-      "project": {
-        "updatedAt": "2026-09-05T13:01:40.583Z",
-        "createdAt": "2026-09-05T11:39:38.675Z",
-        "id": "yJLQvv6llW4xz9Hb",
-        "name": "CyberFlow AI",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "dd0086eb-f928-4f42-89aa-a005078c4398"
-      }
-    }
-  ],
   "versionMetadata": {
     "name": null,
     "description": null

@@ -531,8 +531,7 @@
           320
         ],
         "id": "1e0d24b1-2114-40ca-81fa-627a045bfe7e",
-        "name": "Send message and wait for response",
-        "webhookId": "32117c83-6720-44a8-887b-c06adfd80f3b"
+        "name": "Send message and wait for response"
       },
       {
         "parameters": {
@@ -662,12 +661,6 @@
                 "id": "ff543c53-450f-40fb-b379-43bd8aad6545",
                 "name": "headline",
                 "value": "={{ $('Mark LinkedIn Draft Approved').item.json.headline }}",
-                "type": "string"
-              },
-              {
-                "id": "e346ee98-6518-4c90-bf10-d638ba37402a",
-                "name": "",
-                "value": "",
                 "type": "string"
               }
             ]

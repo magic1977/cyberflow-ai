@@ -23,3 +23,7 @@ temp/
 
 # Operating system files
 .DS_Store
+
+# Local backups
+backups/
+workflows/backups/
