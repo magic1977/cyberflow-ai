@@ -23,3 +23,8 @@ temp/
 
 # Local database and application backups
 backups/
+
+# SQL migrations are source code and must be version controlled
+!database/
+!database/migrations/
+!database/migrations/*.sql

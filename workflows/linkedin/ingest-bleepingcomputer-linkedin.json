@@ -1,0 +1,1293 @@
+[
+  {
+    "name": "INGEST - BleepingComputer",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -1360,
+          -432
+        ],
+        "id": "36bba68d-7c18-4089-823b-91d396695f34",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "url": "https://www.bleepingcomputer.com/feed/",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.rssFeedRead",
+        "typeVersion": 1.2,
+        "position": [
+          -1120,
+          -432
+        ],
+        "id": "d93c82b7-f5b6-4cb6-b864-c27a153a12c9",
+        "name": "RSS Read"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c5eac5e8-3fe2-4bae-aefc-ff98e047c7c7",
+                "name": "title",
+                "value": "={{ $json.title }}",
+                "type": "string"
+              },
+              {
+                "id": "5ca95742-17e5-490e-9c01-b1568bab6316",
+                "name": "url",
+                "value": "={{ $json.link }}",
+                "type": "string"
+              },
+              {
+                "id": "04112b5b-3fec-4e8a-a773-769561a35fb8",
+                "name": "published_at",
+                "value": "={{ $json.isoDate }}",
+                "type": "string"
+              },
+              {
+                "id": "4b5dc33d-b95c-44be-b54c-4952ba9fe1ba",
+                "name": "raw_summary",
+                "value": "={{ $json.contentSnippet }}",
+                "type": "string"
+              },
+              {
+                "id": "0506ae7d-41a5-43dc-ac80-ea07d3e8b94e",
+                "name": "processing_status",
+                "value": "new",
+                "type": "string"
+              },
+              {
+                "id": "ba4707a5-5345-4f4b-9551-09ef84623626",
+                "name": "external_id",
+                "value": "={{ $json.guid }}",
+                "type": "string"
+              },
+              {
+                "id": "86b5c0e2-a86b-46d4-b1da-656943a3d3d5",
+                "name": "title",
+                "value": "={{ $json.title }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          -864,
+          -432
+        ],
+        "id": "b9971d73-d7ee-43fc-b428-c2caaa80fcb9",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "WITH input_data AS (\n    SELECT\n        $1::text AS external_id,\n        $2::text AS title,\n        $3::text AS url,\n        $4::timestamptz AS published_at,\n        $5::text AS raw_summary,\n        $6::text AS processing_status\n),\ninserted AS (\n    INSERT INTO cyber_articles (\n        source_id,\n        external_id,\n        title,\n        url,\n        published_at,\n        raw_summary,\n        processing_status,\n        updated_at\n    )\n    SELECT\n        (SELECT id FROM cyber_sources WHERE name = 'BleepingComputer' LIMIT 1),\n        external_id,\n        title,\n        url,\n        published_at,\n        raw_summary,\n        processing_status,\n        NOW()\n    FROM input_data\n    ON CONFLICT (url) DO NOTHING\n    RETURNING id, external_id, title, url\n)\nSELECT\n    id,\n    external_id,\n    title,\n    url,\n    TRUE AS is_new\nFROM inserted\n\nUNION ALL\n\nSELECT\n    ca.id,\n    ca.external_id,\n    ca.title,\n    ca.url,\n    FALSE AS is_new\nFROM cyber_articles ca\nJOIN input_data i ON ca.url = i.url\nWHERE NOT EXISTS (SELECT 1 FROM inserted);",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.external_id,\n  $json.title,\n  $json.url,\n  $json.published_at,\n  $json.raw_summary,\n  $json.processing_status\n]\n}}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          -608,
+          -432
+        ],
+        "id": "49e7bca9-7dc2-481a-8d83-d605e4ce3f0e",
+        "name": "Execute a SQL query"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "331a2c4d-94ba-4e0d-8d9e-bdf70df62fd6",
+                "leftValue": "={{ $json.is_new }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -368,
+          -432
+        ],
+        "id": "1f0b367c-a53a-4eac-9067-be9f4100f21d",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.6-terra",
+            "mode": "list",
+            "cachedResultName": "GPT-5.6-TERRA"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "=You are a cybersecurity intelligence scoring agent.\n\nEvaluate the following cybersecurity news item for whether it deserves further research and potentially a professional LinkedIn post.\n\nReturn ONLY valid JSON. No markdown. No commentary.\n\nScoring rules:\n- relevance_score: 0-10 overall cybersecurity relevance\n- technical_score: 0-10 technical depth/significance\n- business_impact: 0-10 potential impact on organisations\n- linkedin_potential: 0-10 potential for a useful professional LinkedIn post\n- uk_relevance: 0-10 relevance to UK/European organisations\n- priority: one of: low, medium, high, critical\n- needs_research: true or false\n- reason: concise explanation, maximum 2 sentences\n\nIncrease priority for:\n- active exploitation\n- zero-days\n- ransomware\n- supply-chain compromise\n- major breaches\n- authentication bypass\n- remote code execution\n- privilege escalation\n- major security vendor compromise\n- critical infrastructure impact\n\nDo not sensationalise.\n\nARTICLE TITLE:\n{{ $json.title }}\n\nARTICLE SUMMARY:\n{{ $json.raw_summary }}\n\nARTICLE URL:\n{{ $json.url }}\n\nPUBLISHED:\n{{ $json.published_at }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [
+          -128,
+          -448
+        ],
+        "id": "c0a85007-466f-41fa-bf26-f3e1f3297706",
+        "name": "Message a model"
+      },
+      {
+        "parameters": {
+          "jsCode": "const scoring = JSON.parse($json.output[0].content[0].text);\n\nreturn [{\n  json: {\n    article_id: $('If').item.json.id,\n    external_id: $('If').item.json.external_id,\n    title: $('If').item.json.title,\n    url: $('If').item.json.url,\n\n    relevance_score: scoring.relevance_score,\n    technical_score: scoring.technical_score,\n    business_impact: scoring.business_impact,\n    linkedin_potential: scoring.linkedin_potential,\n    uk_relevance: scoring.uk_relevance,\n    ai_priority: scoring.priority,\n    needs_research: scoring.needs_research,\n    ai_reason: scoring.reason\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          -448
+        ],
+        "id": "8021a75b-e56f-45c7-a053-b3ffa0175a64",
+        "name": "Parse AI Scoring"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE cyber_articles\nSET\n    relevance_score = $1,\n    technical_score = $2,\n    business_impact = $3,\n    linkedin_potential = $4,\n    uk_relevance = $5,\n    ai_priority = $6,\n    needs_research = $7,\n    ai_reason = $8,\n    scored_at = NOW(),\n    processing_status = 'processed',\n    updated_at = NOW()\nWHERE id = $9\nRETURNING\n    id,\n    title,\n    relevance_score,\n    technical_score,\n    business_impact,\n    linkedin_potential,\n    uk_relevance,\n    ai_priority,\n    needs_research,\n    scored_at;",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.relevance_score,\n  $json.technical_score,\n  $json.business_impact,\n  $json.linkedin_potential,\n  $json.uk_relevance,\n  $json.ai_priority,\n  $json.needs_research,\n  $json.ai_reason,\n  $json.article_id\n]\n}}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          -1360,
+          -192
+        ],
+        "id": "1b4f1878-bf99-4799-9ff7-8755f2aa4243",
+        "name": "Save AI Score"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3508ae63-e59f-4dd1-bfc4-83513a726a34",
+                "leftValue": "={{ $json.relevance_score }}",
+                "rightValue": 7,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1120,
+          -192
+        ],
+        "id": "2fe67b50-e4cb-4e9f-8e4f-0a8cb34ad6bf",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "query": "={{ $json.title }}",
+          "additionalParameters": {}
+        },
+        "type": "@brave/n8n-nodes-brave-search.braveSearch",
+        "typeVersion": 1.1,
+        "position": [
+          -864,
+          -208
+        ],
+        "id": "7cc90fa4-970a-4a6e-a5ee-0ee127228ad6",
+        "name": "Brave Search"
+      },
+      {
+        "parameters": {
+          "jsCode": "const results = $json.web?.results ?? [];\n\nconst cleaned = results.slice(0, 10).map((r, index) => ({\n  rank: index + 1,\n  title: r.title ?? '',\n  url: r.url ?? '',\n  domain: r.meta_url?.hostname ?? '',\n  description: (r.description ?? '').replace(/<[^>]*>/g, ''),\n  published_at: r.page_age ?? r.article?.date ?? null,\n  publisher: r.article?.publisher?.name ?? r.profile?.name ?? '',\n  extra_snippets: (r.extra_snippets ?? []).slice(0, 2)\n}));\n\nreturn [{\n  json: {\n    article_id: $('If1').item.json.id,\n    article_title: $('If1').item.json.title,\n    relevance_score: $('If1').item.json.relevance_score,\n    research_sources: cleaned\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -624,
+          -208
+        ],
+        "id": "2c2e9d6d-cebf-437a-908c-f8952f695240",
+        "name": "Normalize Research Sources"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.6-terra",
+            "mode": "list",
+            "cachedResultName": "GPT-5.6-TERRA"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "=You are a cybersecurity source verification agent.\n\nYour task is to determine whether the original cybersecurity news item is sufficiently verified by the research sources below.\n\nReturn ONLY valid JSON. No markdown. No commentary.\n\nVerification rules:\n- Prefer primary sources such as vendors, security research teams, government agencies, CERTs, or original researchers.\n- Distinguish between sources reporting the exact same incident and sources discussing only a similar or related campaign.\n- Do not count syndicated copies or obvious rewrites as independent confirmation.\n- Do not assume a claim is true just because several low-quality sites repeat it.\n- Mark verified=true only when the core claim is supported by at least one strong primary source OR by at least two credible independent sources.\n- Be conservative.\n- Do not invent facts or sources.\n\nReturn exactly this structure:\n\n{\n  \"verified\": true,\n  \"confidence\": 0.0,\n  \"primary_source_found\": true,\n  \"independent_confirmation_count\": 0,\n  \"best_source_url\": \"\",\n  \"best_source_name\": \"\",\n  \"claims_supported\": [],\n  \"claims_unconfirmed\": [],\n  \"verification_summary\": \"\"\n}\n\nORIGINAL ARTICLE:\nTitle: {{ $json.article_title }}\n\nRESEARCH SOURCES:\n{{ JSON.stringify($json.research_sources) }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [
+          -368,
+          -208
+        ],
+        "id": "c10bac3a-0873-48a9-abfc-a786a47502e0",
+        "name": "GPT-5.6-TERRA - Source Verification"
+      },
+      {
+        "parameters": {
+          "jsCode": "const verification = JSON.parse($json.output[0].content[0].text);\n\nreturn [{\n  json: {\n    article_id: $('Normalize Research Sources').item.json.article_id,\n    article_title: $('Normalize Research Sources').item.json.article_title,\n\n    verified: verification.verified,\n    verification_confidence: verification.confidence,\n    primary_source_found: verification.primary_source_found,\n    independent_confirmation_count: verification.independent_confirmation_count,\n    best_source_url: verification.best_source_url,\n    best_source_name: verification.best_source_name,\n    claims_supported: verification.claims_supported,\n    claims_unconfirmed: verification.claims_unconfirmed,\n    verification_summary: verification.verification_summary\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          48,
+          -208
+        ],
+        "id": "e9ec70f3-1a6f-4592-8284-742c31422194",
+        "name": "Parse Source Verification"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE cyber_articles\nSET\n    verified = $1,\n    verification_confidence = $2,\n    primary_source_found = $3,\n    independent_confirmation_count = $4,\n    best_source_url = $5,\n    best_source_name = $6,\n    claims_supported = $7::jsonb,\n    claims_unconfirmed = $8::jsonb,\n    verification_summary = $9,\n    verified_at = NOW(),\n    updated_at = NOW()\nWHERE id = $10\nRETURNING\n    id,\n    title,\n    url,\n    verified,\n    verification_confidence,\n    primary_source_found,\n    independent_confirmation_count,\n    best_source_name,\n    best_source_url,\n    claims_supported,\n    claims_unconfirmed,\n    verification_summary,\n    verified_at;",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.verified,\n  $json.verification_confidence,\n  $json.primary_source_found,\n  $json.independent_confirmation_count,\n  $json.best_source_url,\n  $json.best_source_name,\n  JSON.stringify($json.claims_supported),\n  JSON.stringify($json.claims_unconfirmed),\n  $json.verification_summary,\n  $json.article_id\n]\n}}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          -1360,
+          64
+        ],
+        "id": "5f4d3fb6-c510-4b3b-a249-fa0021d9d09d",
+        "name": "Save Verification"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "5d91ad59-0197-4e53-9483-179caf320f47",
+                "leftValue": "={{ $json.verified }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "c2670f02-3f88-49e9-8a18-dde39d905765",
+                "leftValue": "={{ Number($json.verification_confidence) }}",
+                "rightValue": 0.8,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1120,
+          64
+        ],
+        "id": "89240010-0312-452b-a09c-112cd104ca2b",
+        "name": "IF - Verified & Confidence"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.6-terra",
+            "mode": "list",
+            "cachedResultName": "GPT-5.6-TERRA"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "=You are a professional cybersecurity content editor preparing a LinkedIn post for a cybersecurity professional.\n\nYour task is to create a concise, technically accurate and professional LinkedIn post based ONLY on the verified information provided below.\n\nARTICLE\n\nTitle:\n{{ $json.title }}\n\nOriginal article URL:\n{{ $json.url || $json.source_url }}\n\nVERIFIED SOURCE INFORMATION\n\nVerification status:\n{{ $json.verified }}\n\nVerification confidence:\n{{ $json.verification_confidence }}\n\nPrimary source found:\n{{ $json.primary_source_found }}\n\nBest verified source:\n{{ $json.best_source_name }}\n\nBest verified source URL:\n{{ $json.best_source_url }}\n\nVERIFIED CLAIMS\n\n{{ JSON.stringify($json.claims_supported) }}\n\nUNCONFIRMED CLAIMS\n\n{{ JSON.stringify($json.claims_unconfirmed) }}\n\nVERIFICATION SUMMARY\n\n{{ $json.verification_summary }}\n\nCONTENT RULES\n\nUse ONLY information contained in VERIFIED CLAIMS and VERIFICATION SUMMARY.\n\nThe verified claims are authoritative.\n\nDo NOT introduce facts from your own knowledge, training data, assumptions, or general cybersecurity knowledge.\n\nDo NOT use information listed under UNCONFIRMED CLAIMS as factual information.\n\nIf a detail is not supported by the verified claims, omit it.\n\nDo not exaggerate severity or impact.\n\nDo not invent:\n- affected organisations\n- malware families\n- CVE identifiers\n- attribution\n- victim counts\n- exploitation details\n- financial impact\n- technical indicators\n- timelines\nunless explicitly supported by VERIFIED CLAIMS.\n\nWrite for a professional cybersecurity audience such as:\nSOC analysts,\nsecurity engineers,\nincident responders,\nthreat intelligence analysts,\nIT infrastructure professionals,\nand security leaders.\n\nSTYLE\n\nThe post should:\n- sound professional and human\n- avoid clickbait\n- avoid sensational language\n- explain why the issue matters\n- highlight a useful defensive or operational takeaway when supported by the verified information\n- use short readable paragraphs\n- be suitable for a professional personal LinkedIn profile\n- avoid emojis unless genuinely useful\n- avoid marketing language\n\nCreate 3 to 5 relevant professional hashtags.\n\nSOURCE SELECTION\n\nUse the best verified source as the source of the LinkedIn post.\n\nIf best_source_url is available, use it as source_url.\n\nIf best_source_name is available, use it as source_name.\n\nOUTPUT FORMAT\n\nReturn ONLY valid JSON.\n\nDo not use Markdown.\nDo not wrap the JSON in ```json.\nDo not add commentary before or after the JSON.\n\nReturn exactly this structure:\n\n{\n  \"headline\": \"A concise professional headline\",\n  \"post\": \"The LinkedIn post body\",\n  \"hashtags\": [\n    \"#Cybersecurity\",\n    \"#Example\"\n  ],\n  \"source_name\": \"Name of the verified source\",\n  \"source_url\": \"https://verified-source-url\"\n}\n\nIMPORTANT OUTPUT RULES\n\n- The \"post\" field MUST contain only the LinkedIn post body.\n- DO NOT include \"Source:\", \"Source URL:\", article URL, or any source link inside \"post\".\n- DO NOT include hashtags inside \"post\".\n- Return hashtags ONLY in the \"hashtags\" array.\n- Return the source URL ONLY in \"source_url\".\n- Never duplicate the source URL.\n- \"source_url\" MUST NOT be empty when best_source_url is available.\n- \"source_name\" MUST use best_source_name when it is available.\n- Return valid JSON that can be parsed directly with JSON.parse()."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [
+          -848,
+          48
+        ],
+        "id": "65965594-c6f8-4c95-858f-e5dc0ba30a69",
+        "name": "GPT-5.6-TERRA - LinkedIn Content Agent"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $json.output[0].content[0].text;\nconst data = JSON.parse(raw);\n\nreturn [\n  {\n    json: data\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -480,
+          48
+        ],
+        "id": "553d2c9f-247d-4323-8ba7-90a57e91cc03",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8bc57408-7924-41a2-8eca-549522a0aae1",
+                "name": "final_post",
+                "value": "={{ $json.post + '\\n\\n' + $json.hashtags.join(' ') + '\\n\\nSource: ' + $json.source_url }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          -240,
+          48
+        ],
+        "id": "41c9dbc9-c477-4b9a-b3bd-f37700c25bbe",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.source_url }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          16,
+          48
+        ],
+        "id": "9ad20160-2437-4856-a9d5-b2c79a871762",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "image_url",
+                "cssSelector": "meta[property=\"og:image\"]",
+                "returnValue": "attribute",
+                "attribute": "content"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          48
+        ],
+        "id": "313c2d89-bb04-43ab-8978-8d72c407ee93",
+        "name": "HTML"
+      },
+      {
+        "parameters": {
+          "url": "https://www.netskope.com/wp-content/uploads/2026/09/malware-on-the-blockchain-an-ongoing-campaigns-new-webrtc-twist.png",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "image"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -1360,
+          320
+        ],
+        "id": "eb24225a-9225-4165-870f-b6c98f099494",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const current = $input.first();\n\nconst postData = $('Edit Fields1').item.json;\n\nreturn [{\n  json: {\n    headline: postData.headline,\n    post: postData.post,\n    hashtags: postData.hashtags,\n    source_name: postData.source_name,\n    source_url: postData.source_url,\n    final_post: postData.final_post,\n    image_url: $json.image_url ?? postData.image_url ?? ''\n  },\n  binary: current.binary\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1152,
+          320
+        ],
+        "id": "6e8ba93c-ad4b-4f92-b39e-a0a7892cbb84",
+        "name": "Build LinkedIn Publishing Payload"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO linkedin_drafts (\n    article_id,\n    headline,\n    post_text,\n    hashtags,\n    source_name,\n    source_url,\n    image_url,\n    status\n)\nVALUES (\n    $1,\n    $2,\n    $3,\n    $4::jsonb,\n    $5,\n    $6,\n    $7,\n    'pending_approval'\n)\nRETURNING\n    id,\n    article_id,\n    headline,\n    post_text,\n    hashtags,\n    source_name,\n    source_url,\n    image_url,\n    status,\n    created_at;",
+          "options": {
+            "queryReplacement": "={{\n[\n  $('Save Verification').item.json.id,\n  $json.headline,\n  $json.final_post,\n  JSON.stringify($json.hashtags),\n  $json.source_name,\n  $json.source_url,\n  $json.image_url\n]\n}}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          -944,
+          320
+        ],
+        "id": "82d6cc76-2d22-46f5-bfd5-7095b2f39445",
+        "name": "Save LinkedIn Draft"
+      },
+      {
+        "parameters": {
+          "operation": "sendAndWait",
+          "sendTo": "approval@example.com",
+          "subject": "🔐 CyberFlow AI — LinkedIn post awaiting approval",
+          "message": "=<h2>🔐 CyberFlow AI — LinkedIn Post Approval</h2>\n\n<h3>{{ $('Build LinkedIn Publishing Payload').item.json.headline }}</h3>\n\n<div style=\"white-space: pre-line; line-height:1.5;\">\n{{ $('Build LinkedIn Publishing Payload').item.json.final_post }}\n</div>",
+          "approvalOptions": {
+            "values": {
+              "approvalType": "double",
+              "disapproveLabel": "Skip"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          -736,
+          320
+        ],
+        "id": "1e0d24b1-2114-40ca-81fa-627a045bfe7e",
+        "name": "Send message and wait for response",
+        "webhookId": "32117c83-6720-44a8-887b-c06adfd80f3b"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "fa0c38e4-cf1a-4f69-a3b6-00fee7b43190",
+                "leftValue": "={{ $json.data.approved }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -544,
+          320
+        ],
+        "id": "ba50c14a-b492-49ef-b2b6-d3f7f8896b13",
+        "name": "IF - LinkedIn Approved"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE linkedin_drafts\nSET\n    status = 'approved',\n    approval_action = 'approve',\n    approved_at = NOW(),\n    updated_at = NOW()\nWHERE id = $1\nRETURNING\n    id,\n    article_id,\n    headline,\n    post_text,\n    hashtags,\n    source_name,\n    source_url,\n    image_url,\n    status,\n    approval_action,\n    approved_at;",
+          "options": {
+            "queryReplacement": "={{ [ $('Save LinkedIn Draft').item.json.id ] }}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          -336,
+          304
+        ],
+        "id": "ed70d08c-06a0-483b-a01e-deb70aa75ca1",
+        "name": "Mark LinkedIn Draft Approved"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE linkedin_drafts\nSET\n    status = 'skipped',\n    approval_action = 'skip',\n    updated_at = NOW()\nWHERE id = $1\nRETURNING\n    id,\n    article_id,\n    headline,\n    status,\n    approval_action,\n    updated_at;",
+          "options": {
+            "queryReplacement": "={{ [ $('Save LinkedIn Draft').item.json.id ] }}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          -512,
+          544
+        ],
+        "id": "f96e4d09-0d02-4ad7-bc40-5fb26af0c9ac",
+        "name": "Execute a SQL query1"
+      },
+      {
+        "parameters": {
+          "url": "https://api.linkedin.com/v2/userinfo",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -144,
+          304
+        ],
+        "id": "15b5e054-bad7-4931-8b8c-64001dc5d874",
+        "name": "LinkedIn - Get Current User"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5049d62b-224a-4828-a6ea-0e7a6f9ea460",
+                "name": "linkedin_person_id",
+                "value": "oK9WEBI_H6",
+                "type": "string"
+              },
+              {
+                "id": "cc692c29-ff16-4ec6-a7d3-a504829ec952",
+                "name": "draft_id",
+                "value": "={{ $('Mark LinkedIn Draft Approved').item.json.id }}",
+                "type": "string"
+              },
+              {
+                "id": "0a6e869f-d35a-40e5-aff8-bf4288dea1ea",
+                "name": "article_id",
+                "value": "={{ $('Mark LinkedIn Draft Approved').item.json.article_id }}",
+                "type": "string"
+              },
+              {
+                "id": "367dca12-829d-4c64-a363-6c4c8114f9d0",
+                "name": "post_text",
+                "value": "={{ $('Mark LinkedIn Draft Approved').item.json.post_text }}",
+                "type": "string"
+              },
+              {
+                "id": "d50222aa-1b38-4418-b096-ef08fba11956",
+                "name": "source_url",
+                "value": "={{ $('Mark LinkedIn Draft Approved').item.json.source_url }}",
+                "type": "string"
+              },
+              {
+                "id": "aec87a99-136a-4b56-a6e5-14ce5b3ad493",
+                "name": "image_url",
+                "value": "={{ $('Mark LinkedIn Draft Approved').item.json.image_url }}",
+                "type": "string"
+              },
+              {
+                "id": "ff543c53-450f-40fb-b379-43bd8aad6545",
+                "name": "headline",
+                "value": "={{ $('Mark LinkedIn Draft Approved').item.json.headline }}",
+                "type": "string"
+              },
+              {
+                "id": "e346ee98-6518-4c90-bf10-d638ba37402a",
+                "name": "",
+                "value": "",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          16,
+          304
+        ],
+        "id": "cbf55e91-6db2-4c9d-982b-61c6dd320465",
+        "name": "Prepare LinkedIn Publish Payload"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.image_url }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "image"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          240,
+          304
+        ],
+        "id": "be49926b-17a7-4b23-8491-e0adca373740",
+        "name": "Download Approved Image"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "={{ $json.value.uploadUrl }}",
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "image",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -656,
+          672
+        ],
+        "id": "1d71960c-652c-4863-98ec-86bb84a6bd08",
+        "name": "LinkedIn - Upload Image Binary"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.linkedin.com/rest/images?action=initializeUpload",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Linkedin-Version",
+                "value": "202608"
+              },
+              {
+                "name": "X-Restli-Protocol-Version",
+                "value": "2.0.0"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"initializeUploadRequest\": {\n    \"owner\": \"urn:li:person:{{ $('Prepare LinkedIn Publish Payload').item.json.linkedin_person_id }}\"\n  }\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -1104,
+          672
+        ],
+        "id": "d55d4ff3-4870-45ab-afc8-7d5a4f540f15",
+        "name": "LinkedIn - Initialize Image Upload"
+      },
+      {
+        "parameters": {
+          "jsCode": "const init = $input.first();\nconst downloaded = $('Download Approved Image').item;\n\nreturn [{\n  json: {\n    ...init.json\n  },\n  binary: downloaded.binary\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -896,
+          672
+        ],
+        "id": "4aace6ba-a0f1-4bbc-a77d-b9467e2250c0",
+        "name": "Combine LinkedIn Upload Data"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.linkedin.com/rest/posts",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Linkedin-Version",
+                "value": "202608"
+              },
+              {
+                "name": "X-Restli-Protocol-Version",
+                "value": "2.0.0"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  author: 'urn:li:person:' + $('Prepare LinkedIn Publish Payload').item.json.linkedin_person_id,\n  commentary: $('Prepare LinkedIn Publish Payload').item.json.post_text,\n  visibility: 'PUBLIC',\n  distribution: {\n    feedDistribution: 'MAIN_FEED',\n    targetEntities: [],\n    thirdPartyDistributionChannels: []\n  },\n  content: {\n    media: {\n      title: $('Prepare LinkedIn Publish Payload').item.json.headline,\n      id: $('LinkedIn - Initialize Image Upload').item.json.value.image\n    }\n  },\n  lifecycleState: 'PUBLISHED',\n  isReshareDisabledByAuthor: false\n}) }}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -320,
+          672
+        ],
+        "id": "db23ebb2-28a3-4843-8b70-62793aa34264",
+        "name": "LinkedIn - Publish Post"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE linkedin_drafts\nSET\n    status = 'published',\n    linkedin_post_id = $2,\n    published_at = NOW(),\n    updated_at = NOW()\nWHERE id = $1\nRETURNING\n    id,\n    article_id,\n    headline,\n    status,\n    linkedin_post_id,\n    published_at;",
+          "options": {
+            "queryReplacement": "={{ [\n  $('Mark LinkedIn Draft Approved').item.json.id,\n  $('LinkedIn - Publish Post').item.json.headers?.['x-restli-id']\n] }}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          160,
+          576
+        ],
+        "id": "055c9553-1229-4569-aa18-dfa4049968bf",
+        "name": "Mark LinkedIn Draft Published"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "2a0396b0-cc1c-4c23-9236-40f7ccab197a",
+                "leftValue": "={{ $json.statusCode }}",
+                "rightValue": 201,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "a1777f4c-1527-4445-bcc9-c40b21133457",
+                "leftValue": "={{ $json.headers?.['x-restli-id'] }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -80,
+          672
+        ],
+        "id": "72ef3155-97d7-4eca-b062-d1efdb4aaecf",
+        "name": "LinkedIn Publish Successful"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE linkedin_drafts\nSET\n    status = 'error',\n    updated_at = NOW()\nWHERE id = $1\nRETURNING\n    id,\n    article_id,\n    headline,\n    status,\n    updated_at;",
+          "options": {
+            "queryReplacement": "={{ [\n  $('Mark LinkedIn Draft Approved').item.json.id\n] }}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.7,
+        "position": [
+          160,
+          784
+        ],
+        "id": "cb879c6e-afa4-46fa-b009-6d6cfdc0aa64",
+        "name": "Mark LinkedIn Draft Error"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "RSS Read",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "RSS Read": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Parse AI Scoring",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse AI Scoring": {
+        "main": [
+          [
+            {
+              "node": "Save AI Score",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save AI Score": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Brave Search",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Brave Search": {
+        "main": [
+          [
+            {
+              "node": "Normalize Research Sources",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Research Sources": {
+        "main": [
+          [
+            {
+              "node": "GPT-5.6-TERRA - Source Verification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5.6-TERRA - Source Verification": {
+        "main": [
+          [
+            {
+              "node": "Parse Source Verification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Source Verification": {
+        "main": [
+          [
+            {
+              "node": "Save Verification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Verification": {
+        "main": [
+          [
+            {
+              "node": "IF - Verified & Confidence",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Verified & Confidence": {
+        "main": [
+          [
+            {
+              "node": "GPT-5.6-TERRA - LinkedIn Content Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5.6-TERRA - LinkedIn Content Agent": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Build LinkedIn Publishing Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build LinkedIn Publishing Payload": {
+        "main": [
+          [
+            {
+              "node": "Save LinkedIn Draft",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save LinkedIn Draft": {
+        "main": [
+          [
+            {
+              "node": "Send message and wait for response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send message and wait for response": {
+        "main": [
+          [
+            {
+              "node": "IF - LinkedIn Approved",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - LinkedIn Approved": {
+        "main": [
+          [
+            {
+              "node": "Mark LinkedIn Draft Approved",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark LinkedIn Draft Approved": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn - Get Current User",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn - Get Current User": {
+        "main": [
+          [
+            {
+              "node": "Prepare LinkedIn Publish Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare LinkedIn Publish Payload": {
+        "main": [
+          [
+            {
+              "node": "Download Approved Image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download Approved Image": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn - Initialize Image Upload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn - Initialize Image Upload": {
+        "main": [
+          [
+            {
+              "node": "Combine LinkedIn Upload Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Combine LinkedIn Upload Data": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn - Upload Image Binary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn - Upload Image Binary": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn - Publish Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn - Publish Post": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn Publish Successful",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn Publish Successful": {
+        "main": [
+          [
+            {
+              "node": "Mark LinkedIn Draft Published",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark LinkedIn Draft Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "staticData": null,
+    "nodeGroups": [],
+    "versionCounter": 375,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
