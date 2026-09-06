@@ -63,4 +63,30 @@ CREATE INDEX IF NOT EXISTS idx_cyber_articles_processing_status
 CREATE INDEX IF NOT EXISTS idx_cyber_articles_content_hash
     ON cyber_articles(content_hash);
 
+
+-- Seed baseline cybersecurity sources required by ingestion workflows.
+INSERT INTO cyber_sources (
+    name,
+    source_type,
+    base_url,
+    feed_url,
+    priority
+)
+VALUES
+    (
+        'BleepingComputer',
+        'rss',
+        'https://www.bleepingcomputer.com',
+        'https://www.bleepingcomputer.com/feed/',
+        5
+    ),
+    (
+        'CISA KEV',
+        'api',
+        'https://www.cisa.gov',
+        'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
+        10
+    )
+ON CONFLICT (name) DO NOTHING;
+
 COMMIT;
