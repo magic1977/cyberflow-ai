@@ -17,3 +17,17 @@ This roadmap describes the intended delivery order. Each phase follows the Docum
 11. **Phase 10 — Future Platform Extensions:** evaluate lead generation, CRM, email, and WhatsApp modules.
 
 Future phases may be reprioritized, but they must not weaken human approval or public-repository safety.
+
+## Current implementation status
+
+- ✅ **Phase 0 — Repository & Documentation:** completed.
+- ✅ **Phase 1 — Platform Core:** completed and validated with Docker, n8n, PostgreSQL, backup/restore, persistence, and health checks.
+- ✅ **Phase 2 — Cybersecurity Sources:** operational with CISA KEV and BleepingComputer ingestion.
+- ✅ **Phase 3 — Deduplication, AI Scoring & Research:** operational with PostgreSQL deduplication, OpenAI relevance scoring, Brave Search research, source verification, and confidence gating.
+- ✅ **Phase 4 — LinkedIn Content Agent:** operational with verified-claims-only content generation and source-image retrieval.
+- ✅ **Phase 5 — Human Approval & Publishing:** end-to-end validated with PostgreSQL drafts, Gmail Human-in-the-Loop approval, LinkedIn OAuth, image upload, public post publishing, and publication-state persistence.
+- ⏳ **Phase 6 — Comment Agent:** not implemented yet.
+- ⏳ **Phase 7 — Analytics:** not implemented yet.
+- ⏳ **Phase 8 — Security Hardening & CI/CD:** planned; baseline repository and runtime security controls already exist.
+- ⏳ **Phase 9 — VPS Migration:** not started.
+- ⏳ **Phase 10 — Future Platform Extensions:** future scope.

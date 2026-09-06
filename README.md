@@ -23,14 +23,18 @@ See [docs/architecture.md](docs/architecture.md) for component responsibilities 
 - Docker Compose for local, reproducible deployments
 - n8n for workflow orchestration
 - PostgreSQL for persistent structured data
-- OpenAI API for future AI-assisted workflow steps
+- OpenAI API for AI-assisted scoring, verification, and content generation
 - GitHub for collaboration and change control
 
-LinkedIn, Buffer, Redis, and monitoring integrations are deferred to later phases.
+LinkedIn publishing is implemented through the LinkedIn API with mandatory human approval. Buffer, Redis, advanced monitoring, and other integrations remain deferred to later phases.
 
 ## Status
 
-Phase 0 is in progress: this repository provides the public-safe project foundation and documentation. No production workflows, AI integrations, publishing, or credentials are implemented yet.
+The project foundation is operational and the first end-to-end cybersecurity-to-LinkedIn pipeline has been validated.
+
+The current pipeline includes cybersecurity ingestion, PostgreSQL persistence and deduplication, AI relevance scoring, external-source research, source verification, LinkedIn content generation, article-image retrieval, draft persistence, Gmail-based human approval, LinkedIn OAuth publishing with image upload, and persistence of publication status and the LinkedIn post identifier.
+
+Human approval remains mandatory before publication. Public workflow exports contain no operational credentials or secrets; credentials must be configured locally after import.
 
 ## Quick start
 
@@ -44,7 +48,7 @@ Phase 0 is in progress: this repository provides the public-safe project foundat
 
 4. Open n8n at `http://localhost:${N8N_PORT:-5678}` and create the initial owner account in n8n's setup screen. Current n8n releases use built-in user management; Basic Auth environment variables are not used.
 
-The stack pins n8n to version `2.37.10`, uses the `Europe/London` timezone, and keeps PostgreSQL accessible only to Docker services. The n8n health check uses the supported `/healthz` endpoint, consistent with n8n's Docker configuration. The first runnable workflows will be added in later phases.
+The stack pins n8n to version `2.37.10`, uses the `Europe/London` timezone, and keeps PostgreSQL accessible only to Docker services. The n8n health check uses the supported `/healthz` endpoint, consistent with n8n's Docker configuration. Runnable public-safe workflow exports are available in the `workflows/` directory. Database schema changes are versioned under `database/migrations/`.
 
 ## Development principles
 
