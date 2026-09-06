@@ -1,0 +1,30 @@
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+
+# Database dumps
+*.dump
+*.sql
+*.sql.gz
+*.bak
+
+# Logs and temporary files
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+
+# Operating system files
+.DS_Store
+
+# Local database and application backups
+backups/
+
+# SQL migrations are source code and must be version controlled
+!database/
+!database/migrations/
+!database/migrations/*.sql

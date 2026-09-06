@@ -1,0 +1,112 @@
+{
+  "updatedAt": "2026-09-05T14:17:22.147Z",
+  "createdAt": "2026-09-05T13:33:46.356Z",
+  "id": "h3lqqYs7yBkkNVJm",
+  "name": "TEST - OpenAI to PostgreSQL",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2709e886-efa7-4025-8ee2-230e68e468e1",
+      "name": "When clicking ‘Execute workflow’",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "Return exactly this text and nothing else:\nCyberFlow AI test successful"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7f38e9bc-b59b-40aa-a53c-2f191df82b37",
+      "name": "Message a model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS ai_test_results (id bigserial PRIMARY KEY, provider text NOT NULL, model text NOT NULL, response_text text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());\nINSERT INTO ai_test_results\n(provider, model, response_text)\nVALUES\n('openai', 'gpt-5-mini', $1)\nRETURNING *;",
+        "options": {
+          "queryReplacement": "={{ $json.output[0].content[0].text }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        592,
+        0
+      ],
+      "id": "41f93439-10ac-48af-a680-232b439ab5d3",
+      "name": "Execute a SQL query",
+      "credentials": {}
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "2eadf3ec-10fc-42cd-a698-cca7f944b312",
+  "activeVersionId": null,
+  "versionCounter": 26,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

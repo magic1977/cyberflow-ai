@@ -1,0 +1,31 @@
+# Version control and local environment
+.git
+.env
+.env.*
+!.env.example
+
+# Credentials and secrets
+secrets/
+credentials/
+
+# Database dumps
+*.dump
+*.sql
+*.sql.gz
+*.bak
+backups/
+workflows/backups/
+
+# Logs and temporary files
+logs/
+tmp/
+temp/
+*.log
+*.tmp
+
+# Operating system files
+.DS_Store
+
+# Local backups
+backups/
+workflows/backups/

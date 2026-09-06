@@ -1,2 +1,74 @@
-# cyberflow-ai
-Modular AI automation platform for cybersecurity intelligence,  research, LinkedIn content and community engagement.
+# CyberFlow AI
+
+CyberFlow AI is a modular, self-hosted AI automation platform. Its first production pipeline turns cybersecurity intelligence into verified, human-approved LinkedIn content and community-engagement suggestions.
+
+## Vision
+
+The platform will collect cybersecurity sources, orchestrate processing with n8n, persist structured data in PostgreSQL, deduplicate and score items with AI assistance, verify sources, and prepare LinkedIn drafts. Publishing and reply suggestions always require human approval.
+
+Future modules may support lead generation, CRM, email, and WhatsApp automation; they are not part of the initial scope.
+
+## Initial architecture
+
+```text
+Cybersecurity sources → n8n → PostgreSQL → deduplication → AI scoring
+→ research and verification → LinkedIn draft → human approval → publishing
+→ comment monitoring → AI reply suggestions → human approval
+```
+
+See [docs/architecture.md](docs/architecture.md) for component responsibilities and data flow.
+
+## Technology stack
+
+- Docker Compose for local, reproducible deployments
+- n8n for workflow orchestration
+- PostgreSQL for persistent structured data
+- OpenAI API for AI-assisted scoring, verification, and content generation
+- GitHub for collaboration and change control
+
+LinkedIn publishing is implemented through the LinkedIn API with mandatory human approval. Buffer, Redis, advanced monitoring, and other integrations remain deferred to later phases.
+
+## Status
+
+The project foundation is operational and the first end-to-end cybersecurity-to-LinkedIn pipeline has been validated.
+
+The current pipeline includes cybersecurity ingestion, PostgreSQL persistence and deduplication, AI relevance scoring, external-source research, source verification, LinkedIn content generation, article-image retrieval, draft persistence, Gmail-based human approval, LinkedIn OAuth publishing with image upload, and persistence of publication status and the LinkedIn post identifier.
+
+Human approval remains mandatory before publication. Public workflow exports contain no operational credentials or secrets; credentials must be configured locally after import.
+
+## Quick start
+
+1. Copy `.env.example` to `.env`.
+2. Replace every placeholder in `.env` with a unique, randomly generated secret of at least 32 characters; never commit it.
+3. Start the development services:
+
+   ```sh
+   docker compose up -d
+   ```
+
+4. Open n8n at `http://localhost:${N8N_PORT:-5678}` and create the initial owner account in n8n's setup screen. Current n8n releases use built-in user management; Basic Auth environment variables are not used.
+
+The stack pins n8n to version `2.37.10`, uses the `Europe/London` timezone, and keeps PostgreSQL accessible only to Docker services. The n8n health check uses the supported `/healthz` endpoint, consistent with n8n's Docker configuration. Runnable public-safe workflow exports are available in the `workflows/` directory. Database schema changes are versioned under `database/migrations/`.
+
+## Development principles
+
+### Documentation First
+
+Every feature follows this lifecycle:
+
+> Requirements → Architecture / ADR if required → Implementation → Tests → Documentation update → Changelog → Pull Request → Release
+
+A feature is not complete until its documentation is updated. Start with [docs/roadmap.md](docs/roadmap.md), the architecture, and applicable ADRs before writing code.
+
+### Human in the Loop
+
+AI can assist with scoring, research, drafting, and reply suggestions. It must not autonomously publish LinkedIn content or replies. A human approves every external action.
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Roadmap](docs/roadmap.md)
+- [Security practices](docs/security.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security reporting](SECURITY.md)
+- [Changelog](CHANGELOG.md)
