@@ -13,6 +13,8 @@ credentials/
 *.sql
 *.sql.gz
 *.bak
+backups/
+workflows/backups/
 
 # Logs and temporary files
 logs/
