@@ -191,9 +191,9 @@ The following procedures have been manually validated on the CyberFlow AI develo
 - [x] n8n workflow export successful
 - [x] workflow copied from Docker storage to host
 - [x] exported workflow checked for obvious secrets
-- [x] OpenAI API credential operational
 - [x] PostgreSQL credential operational
-- [x] OpenAI → PostgreSQL end-to-end workflow operational
+- [ ] (Optional) OpenAI API credential operational (configured locally; not stored in the repo)
+- [ ] (Optional) OpenAI → PostgreSQL workflow run validated locally (not part of the repository foundation)
 
 ---
 
